@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "node.h"
 
 node *entry_node = NULL, *current_node = NULL;
@@ -11,6 +12,11 @@ void add_node(char *key, void *value) {
 
     if (key == NULL || value == NULL) 
         return;
+    
+    if (has_node(key)) {
+        mod_node(key, value);
+        return;
+    }
 
     node *new_node = (node*)malloc(sizeof(node)); // initialize the node after checking
 
@@ -33,11 +39,11 @@ void add_node(char *key, void *value) {
     return;
 }
 
-void rem_node(char *key) {
+void pop_node(char *key) {
     if (has_node(key) == false)
         return;
 
-    node *target_node = traverse_tree(key, entry_node);
+    node *target_node = map_get(key);
 
     if (target_node->next != NULL) {
 
@@ -45,9 +51,8 @@ void rem_node(char *key) {
             entry_node = target_node->next;
         
         else if (target_node->prev != NULL) {
-            node* temporal_node = target_node->prev;
-            temporal_node->next = target_node->next;
-            free(temporal_node);
+            target_node->next->prev = target_node->next;
+            target_node->next->prev = target_node->prev;
         }
 
 
@@ -62,48 +67,124 @@ void rem_node(char *key) {
     }
 
     free(target_node);
-    current_node = traverse_end(entry_node);
+    current_node = map_end();
     return;
-}
-
-int has_node(char *key) {
-    return ( (traverse_tree(key, entry_node) == NULL) ? false : true);
 }
 
 void* get_node(char *key) {
     if (has_node(key) == false) 
         return NULL;
     
-    return traverse_tree(key, entry_node)->value;
+    return map_get(key)->value;
 }
 
-void edt_node(char *key, void *value) {
+void mod_node(char *key, void *value) {
     if (value == NULL) 
         return;
 
     if (has_node(key) == false) 
         return;
     
-    node* target_node = traverse_tree(key, entry_node);
+    node* target_node = map_get(key);
     target_node->value = value;
 
     return;
 }
 
-node* traverse_tree(char *key, node *current_node) {
-    if (*current_node->key == *key)
-        return current_node;
+int has_node(char *key) {
+    node* target_node = entry_node;
 
-    if (current_node->next == NULL)
-        return NULL;
-    
-    return traverse_tree(key, current_node->next);
+    while (target_node != NULL) {
+        if (strcmp(target_node->key, key) == 0) {
+            return true;
+        }
+        target_node = target_node->next;
+    }
+    return false;
 }
 
-node* traverse_end(node* current_node) {
+node* map_get(char* key) {
+    node* target_node = entry_node;
+    while (strcmp(target_node->key, key) != 0) {
+        target_node = target_node->next;
+    }
+    return target_node;
+}
 
-    if (current_node->next == NULL)
-        return current_node;
+node* map_end() {
+    node* target_node = entry_node;
+    while (target_node->next != NULL) {
+        target_node = target_node->next;
+    }
+    return target_node;
+}
+
+char** map_keys() {
+    if (entry_node == NULL)
+        return NULL;
     
-    return traverse_end(current_node->next);
+    int size = 16, len = 0;
+    char** new_array = malloc(size * sizeof(char*)); if (new_array == NULL) return NULL;
+    node *target_node = entry_node;
+
+    while (target_node != NULL) {
+
+        if (len >= size) {
+            size *= 2;
+            new_array = realloc(new_array, size * sizeof(char*));
+            
+            if (new_array == NULL) {
+                return NULL;
+            }
+        }
+
+        new_array[len++] = target_node->key;
+        target_node = target_node->next;
+
+    }
+    new_array[len] = NULL;
+
+    char** short_array = new_array;
+    short_array = realloc(short_array, len * sizeof(char*));
+
+    if (short_array != NULL) {
+        return short_array;
+    }
+
+    return new_array;
+}
+
+void** map_values() {
+    if (entry_node == NULL)
+        return NULL;
+    
+    int size = 16, len = 0;
+    void** new_array = malloc(size * sizeof(void*)); if (new_array == NULL) return NULL;
+    node *target_node = entry_node;
+
+    while (target_node != NULL) {
+
+        if (len >= size) {
+            size *= 2;
+            new_array = realloc(new_array, size * sizeof(void*));
+            
+            if (new_array == NULL) {
+                return NULL;
+            }
+        }
+
+        new_array[len++] = target_node->value;
+        target_node = target_node->next;
+
+    }
+    new_array[len] = NULL;
+
+    void** short_array = new_array;
+    short_array = realloc(short_array, len * sizeof(void*));
+
+    if (short_array != NULL) {
+        return short_array;
+    }
+
+    return new_array;
 }

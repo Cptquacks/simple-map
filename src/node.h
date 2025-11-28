@@ -12,11 +12,14 @@ struct node {
 
 
 void add_node(char*, void*);
-void rem_node(char*);
+void pop_node(char*);
 
-int has_node(char*);
 void* get_node(char*);
-void edt_node(char*, void*);
+void mod_node(char*, void*);
+int has_node(char*);
 
-node* traverse_tree(char*, node*);
-node* traverse_end(node*);
+node* map_get(char*);
+node* map_end();
+
+char** map_keys();
+void** map_values();
